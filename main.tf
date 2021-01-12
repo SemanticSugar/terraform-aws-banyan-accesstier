@@ -159,6 +159,10 @@ resource aws_lb_target_group "target443" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
+
+  tags = merge(var.tags, {
+    Provider = "BanyanOps"
+  })
 }
 
 resource aws_lb_listener "listener443" {
@@ -185,6 +189,10 @@ resource aws_lb_target_group "target80" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
+
+  tags = merge(var.tags, {
+    Provider = "BanyanOps"
+  })
 }
 
 resource aws_lb_listener "listener80" {
@@ -211,6 +219,10 @@ resource aws_lb_target_group "target8443" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
+
+  tags = merge(var.tags, {
+    Provider = "BanyanOps"
+  })
 }
 
 resource aws_lb_listener "listener8443" {
