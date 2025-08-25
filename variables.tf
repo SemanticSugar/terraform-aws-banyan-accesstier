@@ -123,6 +123,12 @@ variable "min_instances" {
   default     = 2
 }
 
+variable "max_instances" {
+  type        = number
+  description = "Maximum number of Access Tier instances in the auto scaling group"
+  default     = 10
+}
+
 variable "custom_user_data" {
   type        = list(string)
   description = "Custom commands to append to the launch configuration initialization script."
@@ -213,6 +219,48 @@ variable "max_instance_lifetime" {
   type        = number
   default     = null
   description = "The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 604800 and 31536000 seconds"
+}
+
+variable "force_delete" {
+  type        = bool
+  default     = false
+  description = "Allows deleting the Auto Scaling Group without waiting for all instances in the pool to terminate"
+}
+
+variable "force_delete_warm_pool" {
+  type        = bool
+  default     = false
+  description = "Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate"
+}
+
+variable "ignore_failed_scaling_activities" {
+  type        = bool
+  default     = false
+  description = "Whether to ignore failed Auto Scaling scaling activities while waiting for capacity"
+}
+
+variable "wait_for_capacity_timeout" {
+  type        = string
+  default     = "10m"
+  description = "Maximum duration that Terraform should wait for ASG instances to be healthy before timing out"
+}
+
+variable "disable_scale_in" {
+  type        = bool
+  default     = false
+  description = "Whether scale in by the target tracking scaling policy is disabled"
+}
+
+variable "enable_zonal_shift" {
+  type        = bool
+  default     = false
+  description = "Whether zonal shift is enabled for the load balancer"
+}
+
+variable "tcp_idle_timeout_seconds" {
+  type        = number
+  default     = 350
+  description = "Time in seconds that the connection is allowed to be idle"
 }
 
 variable "http_endpoint_imds_v2" {

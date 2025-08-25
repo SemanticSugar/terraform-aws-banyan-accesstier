@@ -66,52 +66,40 @@ resource "aws_security_group" "sg" {
     description = "Management"
   }
 
-  egress {
-    from_port   = var.shield_port  # shield_port defaults to 0
-    to_port     = var.shield_port != 0 ? var.shield_port : 65535
-    protocol    = "tcp"
-    cidr_blocks = var.shield_cidrs
-    description = "Shield (Cluster Coordinator)"
-  }
-
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = var.command_center_cidrs
-    description = "Command Center"
-  }
-
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = var.trustprovider_cidrs
-    description = "TrustProvider"
-  }
-
+  # Backported from actual AWS deployed state - single allow-all egress rule
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = var.managed_internal_cidrs
-    description = "Managed internal services"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow egress to everything"
   }
 
   tags = merge(local.tags, var.security_group_tags)
 }
 
 resource "aws_autoscaling_group" "asg" {
-  name                      = "${var.name_prefix}-accesstier-asg"
-  launch_configuration      = aws_launch_configuration.conf.name
-  max_size                  = 10
-  min_size                  = var.min_instances
-  desired_capacity          = var.min_instances
-  vpc_zone_identifier       = var.private_subnet_ids
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  target_group_arns         = compact([join("", aws_lb_target_group.target80.*.arn), aws_lb_target_group.target443.arn, aws_lb_target_group.target8443.arn])
-  max_instance_lifetime     = var.max_instance_lifetime
+  name                              = "${var.name_prefix}-accesstier-asg"
+  launch_configuration              = aws_launch_configuration.conf.name
+  max_size                          = var.max_instances
+  min_size                          = var.min_instances
+  desired_capacity                  = var.min_instances
+  vpc_zone_identifier               = var.private_subnet_ids
+  health_check_grace_period         = 300
+  health_check_type                 = "ELB"
+  target_group_arns                 = compact([join("", aws_lb_target_group.target80.*.arn), aws_lb_target_group.target443.arn, aws_lb_target_group.target8443.arn])
+  max_instance_lifetime             = var.max_instance_lifetime
+  force_delete                      = var.force_delete
+  force_delete_warm_pool            = var.force_delete_warm_pool
+  ignore_failed_scaling_activities  = var.ignore_failed_scaling_activities
+  wait_for_capacity_timeout         = var.wait_for_capacity_timeout
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore AWS provider evolution attributes
+      capacity_reservation_specification,
+    ]
+  }
 
   dynamic "tag" {
     # do another merge for application specific tags if need-be
@@ -203,6 +191,7 @@ resource "aws_alb" "nlb" {
   internal                         = false
   subnets                          = var.public_subnet_ids
   enable_cross_zone_load_balancing = var.cross_zone_enabled
+  enable_zonal_shift               = var.enable_zonal_shift
 
   tags = merge(local.tags, var.lb_tags)
 }
@@ -230,9 +219,11 @@ resource "aws_lb_target_group" "target443" {
 }
 
 resource "aws_lb_listener" "listener443" {
-  load_balancer_arn = aws_alb.nlb.arn
-  port              = 443
-  protocol          = "TCP"
+  load_balancer_arn        = aws_alb.nlb.arn
+  port                     = 443
+  protocol                 = "TCP"
+  tcp_idle_timeout_seconds = var.tcp_idle_timeout_seconds
+  
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.target443.arn
@@ -298,9 +289,11 @@ resource "aws_lb_target_group" "target8443" {
 }
 
 resource "aws_lb_listener" "listener8443" {
-  load_balancer_arn = aws_alb.nlb.arn
-  port              = 8443
-  protocol          = "TCP"
+  load_balancer_arn        = aws_alb.nlb.arn
+  port                     = 8443
+  protocol                 = "TCP"
+  tcp_idle_timeout_seconds = var.tcp_idle_timeout_seconds
+  
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.target8443.arn
@@ -315,6 +308,7 @@ resource "aws_autoscaling_policy" "cpu_policy" {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
-    target_value = 80
+    target_value     = 80
+    disable_scale_in = var.disable_scale_in
   }
 }

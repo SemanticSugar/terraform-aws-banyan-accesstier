@@ -93,6 +93,7 @@ terraform plan
 | <a name="input_managed_internal_cidrs"></a> [managed\_internal\_cidrs](#input\_managed\_internal\_cidrs) | CIDR blocks to allow managed internal services connections to | `list(string)` | `[ "0.0.0.0/0" ]` | no |
 | <a name="input_management_cidrs"></a> [management\_cidrs](#input\_management\_cidrs) | CIDR blocks to allow SSH connections from | `list(string)` | `[ "0.0.0.0/0" ]` | no |
 | <a name="input_min_instances"></a> [min\_instances](#input\_min\_instances) | Minimum number of Access Tier instances to keep alive | `number` | `2` | no |
+| <a name="input_max_instances"></a> [max\_instances](#input\_max\_instances) | Maximum number of Access Tier instances in the auto scaling group | `number` | `10` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | String to be added in front of all AWS object names | `string` | `"banyan"` | no |
 | <a name="input_package_name"></a> [package\_name](#input\_package\_name) | Override to use a specific version of netagent (e.g. `banyan-netagent-1.5.0`) | `string` | `"banyan-netagent"` | no |
 | <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | IDs of the subnets where the Access Tier should create instances | `list(string)` | n/a | yes |
@@ -114,6 +115,13 @@ terraform plan
 | <a name="input_http_hop_limit_imds_v2"></a> [http\_hop\_limit\_imds\_v2](#input\_http\_hop\_limit\_imds\_v2) | Value for http_put_response_hop_limit to enable imds v2 for ec2 instance | `number` | `1` | no |
 | <a name="input_datadog_api_key"></a> [datadog\_api\_key](#input\_datadog\_api\_key) | DataDog API key to enable sending connection metrics into DataDog | `string` | `null` | no |
 | <a name="input_sticky_sessions"></a> [datadog\_sticky\_sessions](#input\_sticky\_sessions) | Whether to force all connections from a source IP through the same Access Tier instance | `bool` | `false` | no |
+| <a name="input_force_delete"></a> [force\_delete](#input\_force\_delete) | Allows deleting the Auto Scaling Group without waiting for all instances in the pool to terminate | `bool` | `false` | no |
+| <a name="input_force_delete_warm_pool"></a> [force\_delete\_warm\_pool](#input\_force\_delete\_warm\_pool) | Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate | `bool` | `false` | no |
+| <a name="input_ignore_failed_scaling_activities"></a> [ignore\_failed\_scaling\_activities](#input\_ignore\_failed\_scaling\_activities) | Whether to ignore failed Auto Scaling scaling activities while waiting for capacity | `bool` | `false` | no |
+| <a name="input_wait_for_capacity_timeout"></a> [wait\_for\_capacity\_timeout](#input\_wait\_for\_capacity\_timeout) | Maximum duration that Terraform should wait for ASG instances to be healthy before timing out | `string` | `"10m"` | no |
+| <a name="input_disable_scale_in"></a> [disable\_scale\_in](#input\_disable\_scale\_in) | Whether scale in by the target tracking scaling policy is disabled | `bool` | `false` | no |
+| <a name="input_enable_zonal_shift"></a> [enable\_zonal\_shift](#input\_enable\_zonal\_shift) | Whether zonal shift is enabled for the load balancer | `bool` | `false` | no |
+| <a name="input_tcp_idle_timeout_seconds"></a> [tcp\_idle\_timeout\_seconds](#input\_tcp\_idle\_timeout\_seconds) | Time in seconds that the connection is allowed to be idle | `number` | `350` | no |
 
 
 The `rate_limiting` object has the following structure:
